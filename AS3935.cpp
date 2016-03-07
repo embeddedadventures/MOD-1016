@@ -1,21 +1,16 @@
+
 /*
-
-Copyright (c) 2015, Embedded Adventures
+Copyright (c) 2016, Embedded Adventures
 All rights reserved.
-
 Contact us at source [at] embeddedadventures.com
 www.embeddedadventures.com
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
-
 - Redistributions of source code must retain the above copyright notice,
   this list of conditions and the following disclaimer.
-
 - Redistributions in binary form must reproduce the above copyright
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
-
 - Neither the name of Embedded Adventures nor the names of its contributors
   may be used to endorse or promote products derived from this software
   without specific prior written permission.
@@ -31,7 +26,6 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 THE POSSIBILITY OF SUCH DAMAGE.
-
 */
 
 //	AS3935 MOD-1016 Lightning Sensor Arduino library
@@ -40,7 +34,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Arduino.h"
 #include "Wire.h"
-#include "MOD1016.h"
+#include "AS3935.h"
 
 volatile bool displayingFrequency;
 volatile sgn32 pulse;
@@ -53,8 +47,6 @@ void pulseDetected() {
 
 void autoTuneCaps(int irq) {
 	int fdiv = mod1016.getDivisionRatio();
-	//Serial.print("Multiply IRQ frequency by ");
-	//Serial.println(fdiv);
 	Serial.println("Measuring frequency. Please wait...\n");
 	freqPerTuneCaps(fdiv, irq);
 	recommendTuning();
@@ -117,13 +109,13 @@ void recommendTuning() {
 
 /*--------------------------------------------------------*/
 
-void MOD1016Class::init(int IRQ_pin) {
+void AS3935Class::init(int IRQ_pin) {
 	calibrateRCO();
 	pinMode(IRQ_pin, INPUT);
 }
 
-void MOD1016Class::calibrateRCO() {
-	Wire.beginTransmission(MOD1016_ADDR);
+void AS3935Class::calibrateRCO() {
+	Wire.beginTransmission(AS3935_ADDR);
 	Wire.write(0x3D);
 	Wire.write(0x96);
 	Wire.endTransmission();
@@ -133,72 +125,82 @@ void MOD1016Class::calibrateRCO() {
 	writeRegister(DISP_TRCO, (0x00 << 5));
 }
 
-uns8 MOD1016Class::readRegisterRaw(uns8 reg) {
-	Wire.beginTransmission(MOD1016_ADDR);
+uns8 AS3935Class::readRegisterRaw(uns8 reg) {
+	Wire.beginTransmission(AS3935_ADDR);
 	Wire.write(reg);
 	Wire.endTransmission(false);
 	uns8 result;
-	Wire.requestFrom(MOD1016_ADDR, 1);
+	Wire.requestFrom(AS3935_ADDR, 1);
 	if (Wire.available()) {
 		result = Wire.read();
 	}
 	return result;
 }
 
-uns8 MOD1016Class::readRegister(uns8 reg, uns8 mask) {
+uns8 AS3935Class::readRegister(uns8 reg, uns8 mask) {
 	uns8 data = readRegisterRaw(reg);
 	return (data & mask);
 }
 
-void MOD1016Class::writeRegister(uns8 reg, uns8 mask, uns8 data) {
+void AS3935Class::writeRegister(uns8 reg, uns8 mask, uns8 data) {
 	uns8 currentReg = readRegisterRaw(reg);
 	currentReg = currentReg & (~mask);
 	data |= currentReg;
-	Wire.beginTransmission(MOD1016_ADDR);
+	Wire.beginTransmission(AS3935_ADDR);
 	Wire.write(reg);
 	Wire.write(data);
 	Wire.endTransmission();
 }
 
-void MOD1016Class::setIndoors() {
+void AS3935Class::setIndoors() {
 	writeRegister(AFE_GB, INDOORS);
 }
 
-void MOD1016Class::setOutdoors() {
+void AS3935Class::setOutdoors() {
 	writeRegister(AFE_GB, OUTDOORS);
 }
 
-void MOD1016Class::setNoiseFloor(uns8 noise) {
+void AS3935Class::setNoiseFloor(uns8 noise) {
 	writeRegister(NOISE_FLOOR, (noise << 4));
 }
 
-void MOD1016Class::setTuneCaps(uns8 tune) {
+void AS3935Class::setTuneCaps(uns8 tune) {
 	writeRegister(TUNE_CAPS, tune);
 	delay(2);
 }
 
-uns8 MOD1016Class::getNoiseFloor() {
+void AS3935Class::enableDisturbers() {
+	writeRegister(MASK_DST, (0 << 5));
+	delay(2);
+}
+
+void AS3935Class::disableDisturbers() {
+	writeRegister(MASK_DST, (1 << 5));
+	delay(2);	
+}
+
+uns8 AS3935Class::getNoiseFloor() {
 	return (readRegister(NOISE_FLOOR) >> 4);
 }
 
-uns8 MOD1016Class::getAFE() {
+uns8 AS3935Class::getAFE() {
 	return (readRegister(AFE_GB) >> 1);
 }
 
-uns8 MOD1016Class::getTuneCaps() {
+uns8 AS3935Class::getTuneCaps() {
 	return readRegister(TUNE_CAPS);
 }
 
-uns8 MOD1016Class::getIRQ() {
+uns8 AS3935Class::getIRQ() {
 	delay(2);
 	return readRegister(IRQ_TBL);
 }
 
-uns8 MOD1016Class::getLightDistance() {
+uns8 AS3935Class::getLightDistance() {
 	return readRegister(LGHT_DIST);
 }
 
-int MOD1016Class::calculateDistance() {
+int AS3935Class::calculateDistance() {
 	uns8 dist = getLightDistance();
 	int km;		
 	switch (dist) {
@@ -256,7 +258,7 @@ int MOD1016Class::calculateDistance() {
 	return km;
 }
 
-int MOD1016Class::getDivisionRatio() {
+int AS3935Class::getDivisionRatio() {
 	uns8 fdiv = (readRegister(LCO_FDIV) >> 6);
 	if (fdiv == 0)
 		return 16;
@@ -268,4 +270,13 @@ int MOD1016Class::getDivisionRatio() {
 		return 128;
 }
 
-MOD1016Class mod1016;
+unsigned int AS3935Class::getIntensity() {
+	uns8 lsb, msb, mmsb;
+	lsb = readRegisterRaw(0x04);
+	msb = readRegisterRaw(0x05);
+	mmsb = readRegisterRaw(0x06) & 0x1F;
+	unsigned int result = (int)lsb | ((int)msb << 8) | ((int)mmsb << 16);
+	return result;
+}
+
+AS3935Class mod1016;

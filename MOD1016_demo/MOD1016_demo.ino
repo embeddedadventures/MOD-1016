@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015, Embedded Adventures
+Copyright (c) 2016, Embedded Adventures
 All rights reserved.
 
 Contact us at source [at] embeddedadventures.com
@@ -39,7 +39,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <Wire.h>
-#include <MOD1016.h>
+#include <AS3935.h>
 
 #define IRQ_pin 2
 
@@ -47,17 +47,21 @@ volatile bool detected = false;
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial) {}
+  Serial.println("Welcome to the MOD-1016 (AS3935) Lightning Sensor test sketch!");
+  Serial.println("Embedded Adventures (www.embeddedadventures.com)\n");
+
   Wire.begin();
   mod1016.init(IRQ_pin);
  
   //Tune Caps, Set AFE, Set Noise Floor
-  autoTuneCaps(IRQ_pin);
-  mod1016.setOutdoors();
-  mod1016.setNoiseFloor(2);
+  //autoTuneCaps(IRQ_pin);
   
-  Serial.println("Welcome to the MOD-1016 (AS3935) Lightning Sensor test sketch!");
-  Serial.println("Embedded Adventures (www.embeddedadventures.com)\n");
-
+  mod1016.setTuneCaps(7);
+  mod1016.setOutdoors();
+  mod1016.setNoiseFloor(5);
+  
+  
   Serial.println("TUNE\tIN/OUT\tNOISEFLOOR");
   Serial.print(mod1016.getTuneCaps(), HEX);
   Serial.print("\t");
@@ -66,7 +70,9 @@ void setup() {
   Serial.println(mod1016.getNoiseFloor(), HEX);
   Serial.print("\n");
 
+  pinMode(IRQ_pin, INPUT);
   attachInterrupt(digitalPinToInterrupt(IRQ_pin), alert, RISING);
+  Serial.println("after interrupt");
 }
 
 void loop() {
@@ -91,9 +97,6 @@ void translateIRQ(uns8 irq) {
       case 8: 
         Serial.println("LIGHTNING DETECTED");
         printDistance();
-        break;
-      default:
-        Serial.println("IDK");
         break;
     }
 }

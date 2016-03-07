@@ -1,21 +1,16 @@
+
 /*
-
-Copyright (c) 2015, Embedded Adventures
+Copyright (c) 2016, Embedded Adventures
 All rights reserved.
-
 Contact us at source [at] embeddedadventures.com
 www.embeddedadventures.com
-
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
-
 - Redistributions of source code must retain the above copyright notice,
   this list of conditions and the following disclaimer.
-
 - Redistributions in binary form must reproduce the above copyright
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
-
 - Neither the name of Embedded Adventures nor the names of its contributors
   may be used to endorse or promote products derived from this software
   without specific prior written permission.
@@ -31,15 +26,14 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 THE POSSIBILITY OF SUCH DAMAGE.
-
 */
 
 //	AS3935 MOD-1016 Lightning Sensor Arduino library
 //	Written originally by Embedded Adventures
 
 
-#ifndef __MOD1016_h
-#define __MOD1016_h
+#ifndef __AS3935_h
+#define __AS3935_h
 
 #include <Arduino.h>
 	
@@ -48,7 +42,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #define sgn32 long int
 #define sgn64 long long int
 
-#define MOD1016_ADDR 	0x03
+#define AS3935_ADDR 	0x03
 #define INDOORS 		0x24
 #define OUTDOORS 		0x1C
 
@@ -81,7 +75,7 @@ void auto_calibrate(int irq);
 
 //End of auto-calibration functions
 
-class MOD1016Class
+class AS3935Class
 {
 private:
 	uns8 readRegisterRaw(uns8 reg);
@@ -94,6 +88,8 @@ public:
 	void setOutdoors();
 	void setNoiseFloor(uns8 noise);
 	void setTuneCaps(uns8 tune);
+	void enableDisturbers();
+	void disableDisturbers();
 	uns8 readRegister(uns8 reg, uns8 mask);
 	uns8 getNoiseFloor();
 	uns8 getAFE();
@@ -103,8 +99,9 @@ public:
 	//Values for KM -> -1 = out of range, 0 = overhead, 1 = not in table
 	int  calculateDistance();
 	int  getDivisionRatio();
+	unsigned int  getIntensity();
 };
 
-extern MOD1016Class mod1016;
+extern AS3935Class mod1016;
 
 #endif
