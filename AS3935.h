@@ -37,10 +37,21 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Arduino.h>
 	
-#define uns8 unsigned char
-#define uns16 unsigned int
-#define sgn32 long int
-#define sgn64 long long int
+#ifndef		uns8	
+	#define uns8	uint8_t
+#endif
+#ifndef		uns16
+	#define uns8	uint16_t
+#endif
+#ifndef		sgn32	
+	#define sgn32	int32_t
+#endif
+#ifndef		sgn64
+	#define sgn64	int64_t
+#endif
+
+#define	AS3935_SPI_READ		0x40
+#define AS3935_SPI_WRITE	0x3F 
 
 #define AS3935_ADDR 	0x03
 #define INDOORS 		0x24
@@ -78,10 +89,18 @@ void auto_calibrate(int irq);
 class AS3935Class
 {
 private:
+	uns8	_irq;
+	uns8	_clk;
+	uns8	_mosi;
+	uns8	_miso;
+	uns8	_cs;
+	bool	_usingI2C;
 	uns8 readRegisterRaw(uns8 reg);
 	
 public:
 	void init(int IRQ_pin);
+	void init(uns8 IRQ_pin, uns8 csPin);
+	void init(uns8 irqPin, uns8 clkPin, uns8 mosiPin, uns8 misoPin, uns8 csPin);
 	void calibrateRCO();
 	void writeRegister(uns8 reg, uns8 mask, uns8 data);
 	void setIndoors();

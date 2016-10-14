@@ -34,10 +34,11 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Arduino.h"
 #include "Wire.h"
+#include "SPI.h"
 #include "AS3935.h"
 
 volatile bool displayingFrequency;
-volatile sgn32 pulse;
+volatile sgn32 pulse = 0;
 sgn32 cap_frequencies[16];
 
 void pulseDetected() {
@@ -114,25 +115,72 @@ void AS3935Class::init(int IRQ_pin) {
 	pinMode(IRQ_pin, INPUT);
 }
 
-void AS3935Class::calibrateRCO() {
-	Wire.beginTransmission(AS3935_ADDR);
-	Wire.write(0x3D);
-	Wire.write(0x96);
-	Wire.endTransmission();
+void AS3935Class::init(uns8 irqPin, uns8 csPin) {
+	_usingI2C = false;
+	_irq = irqPin;
+	_cs = csPin;
+	pinMode(_cs, OUTPUT);
+	digitalWrite(_cs, HIGH);
+	calibrateRCO();
+	pinMode(_irq, INPUT);
+	SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE2));
+}
 
+void AS3935Class::init(uns8 irqPin, uns8 clkPin, uns8 mosiPin, uns8 misoPin, uns8 csPin) {
+	_usingI2C = false;
+	_irq = irqPin;
+	_clk = clkPin;
+	_mosi = mosiPin;
+	_miso = misoPin;
+	_cs = csPin;
+	
+	pinMode(_clk, OUTPUT);
+	pinMode(_mosi, OUTPUT);
+	pinMode(_miso, INPUT);
+	pinMode(_cs, OUTPUT);
+	digitalWrite(_cs, HIGH);
+	calibrateRCO();
+	pinMode(_irq, INPUT);
+	SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE2));
+	
+}
+
+void AS3935Class::calibrateRCO() {
+	if (_usingI2C) {
+		Wire.beginTransmission(AS3935_ADDR);
+		Wire.write(0x3D);
+		Wire.write(0x96);
+		Wire.endTransmission();
+	}
+	else {
+		digitalWrite(_cs, LOW);
+		SPI.transfer(AS3935_SPI_WRITE & 0x3D);
+		SPI.transfer(0x96);
+		digitalWrite(_cs, HIGH);
+	}
 	writeRegister(DISP_TRCO, (0x01 << 5));
 	delay(2);
 	writeRegister(DISP_TRCO, (0x00 << 5));
 }
 
 uns8 AS3935Class::readRegisterRaw(uns8 reg) {
-	Wire.beginTransmission(AS3935_ADDR);
-	Wire.write(reg);
-	Wire.endTransmission(false);
 	uns8 result;
-	Wire.requestFrom(AS3935_ADDR, 1);
-	if (Wire.available()) {
-		result = Wire.read();
+	if (_usingI2C) {
+		Wire.beginTransmission(AS3935_ADDR);
+		Wire.write(reg);
+		Wire.endTransmission(false);
+		Wire.requestFrom(AS3935_ADDR, 1);
+		if (Wire.available()) {
+			result = Wire.read();
+		}
+	}
+	else {
+		reg &= 0x3F;
+		reg |= AS3935_SPI_READ;
+		digitalWrite(_cs, LOW);
+		SPI.transfer(reg);
+		result = SPI.transfer(0x00); 
+		digitalWrite(_cs, HIGH);
 	}
 	return result;
 }
@@ -146,10 +194,19 @@ void AS3935Class::writeRegister(uns8 reg, uns8 mask, uns8 data) {
 	uns8 currentReg = readRegisterRaw(reg);
 	currentReg = currentReg & (~mask);
 	data |= currentReg;
-	Wire.beginTransmission(AS3935_ADDR);
-	Wire.write(reg);
-	Wire.write(data);
-	Wire.endTransmission();
+	if (_usingI2C) {
+		Wire.beginTransmission(AS3935_ADDR);
+		Wire.write(reg);
+		Wire.write(data);
+		Wire.endTransmission();
+	}
+	else {
+		reg &= AS3935_SPI_WRITE;
+		digitalWrite(_cs, LOW);
+		SPI.transfer(reg);
+		SPI.transfer(data);
+		digitalWrite(_cs, HIGH);
+	}
 }
 
 void AS3935Class::setIndoors() {

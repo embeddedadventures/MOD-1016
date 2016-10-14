@@ -41,7 +41,8 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wire.h>
 #include <AS3935.h>
 
-#define IRQ_pin 2
+#define IRQ_PIN 2
+#define CS_PIN 10
 
 volatile bool detected = false;
 
@@ -51,8 +52,12 @@ void setup() {
   Serial.println("Welcome to the MOD-1016 (AS3935) Lightning Sensor test sketch!");
   Serial.println("Embedded Adventures (www.embeddedadventures.com)\n");
 
+  //I2C
   Wire.begin();
   mod1016.init(IRQ_pin);
+  //SPI - Arduino Uno
+  //SPI.begin();
+  //mod1016.init(IRQ_PIN, CS_PIN);
  
   //Tune Caps, Set AFE, Set Noise Floor
   //autoTuneCaps(IRQ_pin);
