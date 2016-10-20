@@ -40,6 +40,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Wire.h>
 #include <AS3935.h>
+#include <SPI.h>
 
 #define IRQ_PIN 2
 #define CS_PIN 10
@@ -53,16 +54,16 @@ void setup() {
   Serial.println("Embedded Adventures (www.embeddedadventures.com)\n");
 
   //I2C
-  Wire.begin();
-  mod1016.init(IRQ_pin);
-  //SPI - Arduino Uno
-  //SPI.begin();
-  //mod1016.init(IRQ_PIN, CS_PIN);
+  //Wire.begin();
+  //mod1016.init(IRQ_PIN);
+  //SPI
+  SPI.begin();
+  mod1016.init(IRQ_PIN, CS_PIN);
  
   //Tune Caps, Set AFE, Set Noise Floor
-  //autoTuneCaps(IRQ_pin);
+  autoTuneCaps(IRQ_PIN);
   
-  mod1016.setTuneCaps(7);
+  //mod1016.setTuneCaps(7);
   mod1016.setOutdoors();
   mod1016.setNoiseFloor(5);
   
@@ -75,8 +76,9 @@ void setup() {
   Serial.println(mod1016.getNoiseFloor(), HEX);
   Serial.print("\n");
 
-  pinMode(IRQ_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(IRQ_pin), alert, RISING);
+  pinMode(IRQ_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), alert, RISING);
+  mod1016.getIRQ();
   Serial.println("after interrupt");
 }
 
