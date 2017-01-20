@@ -1,6 +1,6 @@
 
 /*
-Copyright (c) 2016, Embedded Adventures
+Copyright (c) 2017, Embedded Adventures
 All rights reserved.
 Contact us at source [at] embeddedadventures.com
 www.embeddedadventures.com
@@ -46,7 +46,7 @@ void pulseDetected() {
 		pulse++;
 }
 
-void autoTuneCaps(int irq) {
+void autoTuneCaps(uns8 irq) {
 	int fdiv = mod1016.getDivisionRatio();
 	Serial.println("Measuring frequency. Please wait...\n");
 	freqPerTuneCaps(fdiv, irq);
@@ -55,7 +55,7 @@ void autoTuneCaps(int irq) {
 	delay(1000);
 }
 
-sgn32 getFrequency(int irq) {
+sgn32 getFrequency(uns8 irq) {
 	mod1016.writeRegister(DISP_LCO, 0x80);
 	displayingFrequency = true;
 	pulse = 0;
@@ -67,7 +67,7 @@ sgn32 getFrequency(int irq) {
 	return (pulse * 5);
 }
 
-void freqPerTuneCaps(int fdiv, int irq) {
+void freqPerTuneCaps(uns16 fdiv, uns8 irq) {
 	for (int i = 0; i < 16; i++) {
 		mod1016.setTuneCaps(i);
 		delay(2);
@@ -104,13 +104,13 @@ void recommendTuning() {
 	}
 	//Serial.print("Best value for TUNE_CAPS - ");
 	//Serial.println(best);
-	Serial.println("Setting TUNE_CAPS...");
+	//Serial.println("Setting TUNE_CAPS...");
 	mod1016.setTuneCaps(best);
 }
 
 /*--------------------------------------------------------*/
 
-void AS3935Class::init(int IRQ_pin) {
+void AS3935Class::init(uns8 IRQ_pin) {
 	_usingI2C = true;
 	calibrateRCO();
 	pinMode(IRQ_pin, INPUT);
@@ -258,9 +258,9 @@ uns8 AS3935Class::getLightDistance() {
 	return readRegister(LGHT_DIST);
 }
 
-int AS3935Class::calculateDistance() {
+sgn16 AS3935Class::calculateDistance() {
 	uns8 dist = getLightDistance();
-	int km;		
+	sgn16 km;		
 	switch (dist) {
 		case 0x3F:
 			km = -1;
@@ -316,7 +316,7 @@ int AS3935Class::calculateDistance() {
 	return km;
 }
 
-int AS3935Class::getDivisionRatio() {
+sgn16 AS3935Class::getDivisionRatio() {
 	uns8 fdiv = (readRegister(LCO_FDIV) >> 6);
 	if (fdiv == 0)
 		return 16;
@@ -328,12 +328,12 @@ int AS3935Class::getDivisionRatio() {
 		return 128;
 }
 
-unsigned int AS3935Class::getIntensity() {
+uns16 AS3935Class::getIntensity() {
 	uns8 lsb, msb, mmsb;
 	lsb = readRegisterRaw(0x04);
 	msb = readRegisterRaw(0x05);
 	mmsb = readRegisterRaw(0x06) & 0x1F;
-	unsigned int result = (int)lsb | ((int)msb << 8) | ((int)mmsb << 16);
+	uns16 result = (uns16)lsb | ((uns16)msb << 8) | ((uns16)mmsb << 16);
 	return result;
 }
 

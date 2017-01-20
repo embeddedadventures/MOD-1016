@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Embedded Adventures
+Copyright (c) 2017, Embedded Adventures
 All rights reserved.
 
 Contact us at source [at] embeddedadventures.com
@@ -54,11 +54,11 @@ void setup() {
   Serial.println("Embedded Adventures (www.embeddedadventures.com)\n");
 
   //I2C
-  //Wire.begin();
-  //mod1016.init(IRQ_PIN);
+  Wire.begin();
+  mod1016.init(IRQ_PIN);
   //SPI
-  SPI.begin();
-  mod1016.init(IRQ_PIN, CS_PIN);
+  //SPI.begin();
+  //mod1016.init(IRQ_PIN, CS_PIN);
  
   //Tune Caps, Set AFE, Set Noise Floor
   autoTuneCaps(IRQ_PIN);

@@ -1,6 +1,6 @@
 
 /*
-Copyright (c) 2016, Embedded Adventures
+Copyright (c) 2017, Embedded Adventures
 All rights reserved.
 Contact us at source [at] embeddedadventures.com
 www.embeddedadventures.com
@@ -41,7 +41,10 @@ THE POSSIBILITY OF SUCH DAMAGE.
 	#define uns8	uint8_t
 #endif
 #ifndef		uns16
-	#define uns8	uint16_t
+	#define uns16	uint16_t
+#endif
+#ifndef		sgn16
+	#define sgn16	int16_t
 #endif
 #ifndef		sgn32	
 	#define sgn32	int32_t
@@ -72,17 +75,17 @@ THE POSSIBILITY OF SUCH DAMAGE.
 //Set of functions for auto calibration of TUNE_CAPS
 
 /*Automatically sets TUNE_CAPS to the best possible setting, ie the one that producs a frequency closest to 500kHz*/
-void autoTuneCaps(int irq);
+void autoTuneCaps(uns8 irq);
 /*ISR for measuring the frequency output on the IRQ pin*/
 void pulseDetected();
 /*Generate the frequency output on IRQ pin and measure number of pulses in 200ms. Returns number of pulses * 5*/
-sgn32 getFrequency(int irq);
+sgn32 getFrequency(uns8 irq);
 /*Measure frequency output under setting 0-15 on TUNE_CAPS*/
-void freqPerTuneCaps(int fdiv, int irq);
+void freqPerTuneCaps(uns16 fdiv, uns8 irq);
 /*Search for the tuning whose frequency is closest to 500kHz, and sets it to that*/
 void recommendTuning();
 
-void auto_calibrate(int irq);
+void auto_calibrate(uns8 irq);
 
 //End of auto-calibration functions
 
@@ -98,7 +101,7 @@ private:
 	uns8 readRegisterRaw(uns8 reg);
 	
 public:
-	void init(int IRQ_pin);
+	void init(uns8 IRQ_pin);
 	void init(uns8 IRQ_pin, uns8 csPin);
 	void init(uns8 irqPin, uns8 clkPin, uns8 mosiPin, uns8 misoPin, uns8 csPin);
 	void calibrateRCO();
@@ -116,9 +119,9 @@ public:
 	uns8 getIRQ();
 	uns8 getLightDistance();
 	//Values for KM -> -1 = out of range, 0 = overhead, 1 = not in table
-	int  calculateDistance();
-	int  getDivisionRatio();
-	unsigned int  getIntensity();
+	sgn16  calculateDistance();
+	sgn16  getDivisionRatio();
+	uns16  getIntensity();
 };
 
 extern AS3935Class mod1016;
