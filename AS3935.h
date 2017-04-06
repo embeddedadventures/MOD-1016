@@ -101,8 +101,8 @@ private:
 	uns8 readRegisterRaw(uns8 reg);
 	
 public:
-	void init(uns8 IRQ_pin);
-	void init(uns8 IRQ_pin, uns8 csPin);
+	void init(uns8 irqPin);
+	void init(uns8 irqPin, uns8 csPin);
 	void init(uns8 irqPin, uns8 clkPin, uns8 mosiPin, uns8 misoPin, uns8 csPin);
 	void calibrateRCO();
 	void writeRegister(uns8 reg, uns8 mask, uns8 data);
