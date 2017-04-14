@@ -113,7 +113,7 @@ void recommendTuning() {
 void AS3935Class::init(uns8 irqPin) {
 	_usingI2C = true;
 	calibrateRCO();
-	pinMode(IRQ_pin, INPUT);
+	pinMode(irqPin, INPUT);
 }
 
 void AS3935Class::init(uns8 irqPin, uns8 csPin) {
